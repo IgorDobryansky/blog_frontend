@@ -23,10 +23,8 @@ type Note = {
   message: string;
 };
 
-// const auth = JSON.parse(localStorage.getItem("auth"));
-// console.log(auth);
 
-const initialState: StateType = {
+export const initialState: StateType = {
   token: null,
   user:  null,
   notes: null
@@ -37,7 +35,7 @@ type Action = {
   payload: any;
 };
 
-const reducer = (state = initialState, action: Action) => {
+export const reducer = (state = initialState, action: Action) => {
   switch (action.type) {
     case "signout":
       localStorage.removeItem("auth");
@@ -69,7 +67,7 @@ const reducer = (state = initialState, action: Action) => {
   }
 };
 
-const AppContext = createContext<{
+export const AppContext = createContext<{
   state: StateType;
   dispatch: Dispatch<any>;
 }>({
@@ -81,16 +79,4 @@ export const useAppState = () => {
   return useContext(AppContext);
 };
 
-export const AppProvider = ({
-  children
-}: {
-  children: ReactNode | ReactNode[];
-}) => {
-  const [state, dispatch] = useReducer(reducer, initialState);
 
-  return (
-    <AppContext.Provider value={{ state, dispatch }}>
-      {children}
-    </AppContext.Provider>
-  );
-};

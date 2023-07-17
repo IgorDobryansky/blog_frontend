@@ -12,17 +12,19 @@ export const authConfig: NextAuthOptions = {
         password: { label: "Password", type: "password", required: true }
       },
       async authorize(credentials) {
-        const res = await axios.post("/login", {
+        console.log("credentials", credentials);
+        const res = await axios.post(`/${credentials?.authType}`, {
           username: credentials?.username,
           password: credentials?.password
         });
 
         const user = res.data.user;
-        // If no error and we have user data, return it
+
         if (user) {
+          console.log(user);
           return user;
         }
-        // Return null if user data could not be retrieved
+
         return null;
       }
     })
@@ -37,6 +39,6 @@ export const authConfig: NextAuthOptions = {
     }
   },
   pages: {
-    signIn: "/login"
+    signIn: "/auth/login"
   }
 };

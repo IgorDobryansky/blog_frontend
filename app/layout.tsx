@@ -2,8 +2,14 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 import Header from "@/components/Header";
-import { AppProvider } from "@/store";
-import NextAuthProvider from "../components/Provider";
+import {
+  ChakraCacheProvider,
+  NextAuthProvider,
+  AppProvider,
+  TanstackQueryClientProvider
+} from "../providers";
+import { Suspense } from "react";
+import Loading from "./loading";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -20,8 +26,14 @@ export default function RootLayout({
       <body>
         <AppProvider>
           <NextAuthProvider>
-            <Header />
-            <main>{children}</main>
+            <ChakraCacheProvider>
+              <TanstackQueryClientProvider>
+                <Suspense fallback={<Loading />}>
+                  <Header />
+                  <main>{children}</main>
+                </Suspense>
+              </TanstackQueryClientProvider>
+            </ChakraCacheProvider>
           </NextAuthProvider>
         </AppProvider>
       </body>

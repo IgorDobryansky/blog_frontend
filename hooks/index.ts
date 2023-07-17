@@ -4,13 +4,7 @@ import axios from "@/http";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 
-type Api = {
-  url: string;
-  method: string;
-  data: any;
-};
-
-const useAxiosAuth = () => {
+export const useAxiosAuth = () => {
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -27,4 +21,3 @@ const useAxiosAuth = () => {
 
   return axios;
 };
-export default useAxiosAuth;

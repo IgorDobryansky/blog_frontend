@@ -10,10 +10,9 @@ type Props = {
 
 export default function layout({ children, params: { authType } }: Props) {
   return (
-    <div>
-      <p>{authType}</p>
+    <>
       <AuthForm type={authType} />
       {children}
-    </div>
+    </>
   );
 }

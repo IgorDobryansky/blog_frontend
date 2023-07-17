@@ -1,23 +1,12 @@
 "use client";
 
-import {
-  Box,
-  Button,
-  ButtonGroup,
-  Container,
-  Flex,
-  Heading,
-  Spacer
-} from "@chakra-ui/react";
+import { Box, Button, ButtonGroup, Flex, Spacer } from "@chakra-ui/react";
 import { useSession, signOut, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import NextLink from "next/link";
 
 export default function Header() {
   const router = useRouter();
   const { data: session } = useSession();
-
 
   return (
     <Flex
@@ -29,6 +18,14 @@ export default function Header() {
       </Box>
       <Spacer />
       <Box p="2">
+        <Button
+          colorScheme="teal"
+          onClick={() => router.push("/dashboard")}
+        >
+          Dashboard
+        </Button>
+      </Box>
+      <Box p="2">
         {session?.user ? (
           <ButtonGroup gap="2">
             <Button
@@ -39,7 +36,7 @@ export default function Header() {
             </Button>
             <Button
               colorScheme="teal"
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={() => signOut()}
             >
               Log Out
             </Button>
@@ -48,9 +45,9 @@ export default function Header() {
           <ButtonGroup gap="2">
             <Button
               colorScheme="teal"
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/auth/registration")}
             >
-              Sign Up
+              Registration
             </Button>
 
             <Button
@@ -62,25 +59,6 @@ export default function Header() {
           </ButtonGroup>
         )}
       </Box>
-
-      {/* <Link href="/">Home</Link>
-      <Link href="/profile">Profile</Link>
-      <Link href="/dashboard">Dashboard</Link>
-      {session?.user ? (
-        <Link
-          href="#"
-          onClick={() => signOut({ callbackUrl: "/" })}
-        >
-          Sign Out
-        </Link>
-      ) : (
-        <Link
-          href="#"
-          onClick={() => signIn()}
-        >
-          Log in
-        </Link>
-      )} */}
     </Flex>
   );
 }
