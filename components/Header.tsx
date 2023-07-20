@@ -20,9 +20,9 @@ export default function Header() {
       <Box p="2">
         <Button
           colorScheme="teal"
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/posts")}
         >
-          Dashboard
+          Posts
         </Button>
       </Box>
       <Box p="2">

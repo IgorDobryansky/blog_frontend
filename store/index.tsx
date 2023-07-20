@@ -1,67 +1,46 @@
 "use client";
 
-import {
-  Dispatch,
-  ReactNode,
-  createContext,
-  useContext,
-  useReducer
-} from "react";
+import { Dispatch, createContext, useContext } from "react";
 
 type StateType = {
-  token: string | null;
-  user: User | null;
-  notes: Note[] | null;
+  editPostText: string;
+  editCommentText: string;
 };
-
-type User = {
-  id: number;
-  username: string;
-};
-
-type Note = {
-  message: string;
-};
-
 
 export const initialState: StateType = {
-  token: null,
-  user:  null,
-  notes: null
+  editPostText: "",
+  editCommentText: ""
 };
 
 type Action = {
   type: string;
-  payload: any;
+  payload: string;
 };
 
 export const reducer = (state = initialState, action: Action) => {
   switch (action.type) {
-    case "signout":
-      localStorage.removeItem("auth");
+    case "clearEditPostText":
       return {
         ...state,
-        token: null,
-        user: null
+        editPostText: ""
       };
-    case "signup":
+    case "clearEditCommentText":
       return {
         ...state,
-        token: action.payload.token,
-        user: action.payload.user
+        editCommentText: ""
       };
 
-    case "signin":
+    case "setEditPostText":
       return {
         ...state,
-        token: action.payload.token,
-        user: action.payload.user
+        editPostText: action.payload
       };
-    case "getNotes":
+    case "setEditCommentText":
       return {
         ...state,
-        notes: action.payload
+        editCommentText: action.payload
       };
+
     default:
       return state;
   }
@@ -78,5 +57,3 @@ export const AppContext = createContext<{
 export const useAppState = () => {
   return useContext(AppContext);
 };
-
-

@@ -9,25 +9,38 @@ import {
   InputGroup,
   Heading,
   Center,
-  Flex
+  Flex,
+  Box
 } from "@chakra-ui/react";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 export default function AuthForm({ type }: { type: string }) {
   const [show, setShow] = useState(false);
+  const [error, setError] = useState("");
   const handleClick = () => setShow(!show);
+
+  const router = useRouter();
 
   const userName = useRef("");
   const password = useRef("");
 
   const submit = async () => {
+    setError("");
     await signIn("credentials", {
       username: userName.current,
       password: password.current,
-      authType: type === "registration" ? "registration" : "login" ,
-      redirect: true,
-      callbackUrl: "/dashboard"
+      authType: type === "registration" ? "registration" : "login",
+      redirect: false
+    }).then((res) => {
+      console.log(res);
+      if (res?.ok && res?.error) {
+        return type === "registration"
+          ? setError("User already exist")
+          : setError("Invalid username or password");
+      }
+      router.push("/posts");
     });
   };
 
@@ -64,6 +77,7 @@ export default function AuthForm({ type }: { type: string }) {
               </Button>
             </InputRightElement>
           </InputGroup>
+          <Box color="red">{!!error && error}</Box>
           <Center>
             <Button
               mt={4}

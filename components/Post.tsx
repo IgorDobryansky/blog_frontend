@@ -1,43 +1,77 @@
 "use client";
 
-import { PostType } from "@/types/types";
 import {
   Button,
   ButtonGroup,
   Flex,
   Heading,
   Input,
-  Spacer
+  Spacer,
+  useToast
 } from "@chakra-ui/react";
-import CommentsList from "./CommentsList";
-import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRef, useState } from "react";
 import { useSession } from "next-auth/react";
+
+import { useAxiosAuth } from "@/hooks";
+import CommentsList from "./CommentsList";
+
+import { PostType } from "@/types/types";
+import Likes from "./Likes";
 
 export default function Post({
   post,
-  sequenceNumber,
-  deletePost,
-  deletingPost,
-  editingPost,
-  editPost,
-  setEditingPost
+  sequenceNumber
 }: {
   post: PostType;
-  deletePost: (id: number) => void;
-  deletingPost: boolean;
   sequenceNumber: number;
-  editingPost: boolean;
-  editPost: ({
-    postId,
-    postText
-  }: {
-    postId: number;
-    postText: string;
-  }) => void;
-  setEditingPost: any;
 }) {
-  const [postText, setPostText] = useState(post.text);
+  const toast = useToast();
+  const [editingPost, setEditingPost] = useState(false);
+  const api = useAxiosAuth();
+
+  const queryClient = useQueryClient();
+
   const { data: session } = useSession();
+
+  const editPostTextRef = useRef<HTMLInputElement>(null!);
+
+  const editPost = useMutation({
+    mutationFn: () =>
+      api.patch(`/posts/${post.id}`, {
+        text: editPostTextRef.current.value,
+        user_id: session?.user.id,
+        username: session?.user.username
+      }),
+    onSuccess: (mutationRes) => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      setEditingPost(false);
+      editPostTextRef.current.value = "";
+      toast({
+        title: `Post.`,
+        description: "Your post has been " + mutationRes.data.status,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "bottom-right"
+      });
+    }
+  });
+
+  const deletePost = useMutation({
+    mutationFn: () => api.delete(`/posts/${post.id}`),
+    onSuccess: async (mutationRes) => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast({
+        title: `Post.`,
+        description: "Your post has been " + mutationRes.data.status,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "bottom-right"
+      });
+    }
+  });
 
   const createdDate = new Date(post.created_at)
     .toLocaleDateString()
@@ -63,14 +97,21 @@ export default function Post({
           <Input
             type="text"
             id="newNoteMessage"
-            value={postText}
-            onChange={(e) => setPostText(e.target.value)}
+            ref={editPostTextRef}
             size="xs"
+            defaultValue={post.text}
           />
         ) : (
-          <Heading size="md">
-            {sequenceNumber}. {post.text}
-          </Heading>
+          <Flex
+            width="100%"
+            alignItems="center"
+          >
+            <Heading size="md">
+              {sequenceNumber}. Post id: {post.id}. {post.text}
+            </Heading>
+            <Spacer />
+            <Likes postId={post.id} />
+          </Flex>
         )}
       </Flex>
       <Flex
@@ -88,13 +129,11 @@ export default function Post({
             <Button
               size="xs"
               colorScheme="teal"
-              isDisabled={deletingPost}
+              isDisabled={editPost.isLoading}
               onClick={
                 editingPost
-                  ? () => {
-                      editPost({ postId: post.id, postText: postText });
-                    }
-                  : () => deletePost(post.id)
+                  ? () => editPost.mutate()
+                  : () => deletePost.mutate()
               }
             >
               {editingPost ? "Save changes" : "Delete post"}

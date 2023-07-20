@@ -1,4 +1,4 @@
-import axios from "@/http";
+import { api } from "@/http";
 
 import type { NextAuthOptions } from "next-auth";
 
@@ -8,12 +8,12 @@ export const authConfig: NextAuthOptions = {
   providers: [
     Credentials({
       credentials: {
-        username: { label: "User name", type: "text", required: true },
-        password: { label: "Password", type: "password", required: true }
+        username: { },
+        password: { },
+        authType: {}
       },
       async authorize(credentials) {
-        console.log("credentials", credentials);
-        const res = await axios.post(`/${credentials?.authType}`, {
+        const res = await api.post(`/${credentials?.authType}`, {
           username: credentials?.username,
           password: credentials?.password
         });
@@ -21,7 +21,6 @@ export const authConfig: NextAuthOptions = {
         const user = res.data.user;
 
         if (user) {
-          console.log(user);
           return user;
         }
 

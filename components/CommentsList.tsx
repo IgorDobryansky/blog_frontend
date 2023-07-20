@@ -1,57 +1,83 @@
 "use client";
 
-import { useAxiosAuth } from "@/hooks";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Flex,
   FormControl,
-  FormLabel,
   Heading,
-  Input
+  Input,
+  useToast
 } from "@chakra-ui/react";
 import { useSession } from "next-auth/react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+
+import { useAxiosAuth } from "@/hooks";
 import Comment from "./Comment";
+
 import { CommentType } from "@/types/types";
 
 export default function CommentsList({ postId }: { postId: number }) {
+  const toast = useToast();
+  const queryClient = useQueryClient();
+  const api = useAxiosAuth();
   const { data: session } = useSession();
+
   const newCommentTextRef = useRef<HTMLInputElement>(null!);
 
-  const [comments, setComments] = useState([]);
-  const [creatingComment, setCreatingComment] = useState(false);
-  const [error, setError] = useState("");
-  const axios = useAxiosAuth();
+  // const createComment = async () => {
+  //   setCreatingComment(true);
+  //   setError("");
+  //   try {
+  //     const res = await api.post(`/posts/${postId}/comments`, {
+  //       text: newCommentTextRef?.current?.value,
+  //       post_id: postId,
+  //       user_id: session?.user.id,
+  //       username: session?.user.username
+  //     });
+  //     if (res.statusText === "Created") {
+  //       newCommentTextRef.current.value = "";
+  //       return setCreatingComment(false);
+  //     }
+  //   } catch (error: any) {
+  //     setError(error.response.data.text);
+  //   } finally {
+  //     setCreatingComment(false);
+  //   }
+  // };
 
-  const createComment = async () => {
-    setCreatingComment(true);
-    setError("");
-    try {
-      const res = await axios.post(`/posts/${postId}/comments`, {
+  const getComments = useQuery({
+    queryKey: ["comments", postId],
+    queryFn: async () => {
+      const res = await api.get(`/posts/${postId}/comments`);
+      return res.data;
+    },
+    refetchOnWindowFocus: false
+  });
+
+  const { data: comments } = getComments;
+
+  const createComment = useMutation({
+    mutationFn: () =>
+      api.post(`/posts/${postId}/comments`, {
         text: newCommentTextRef?.current?.value,
         post_id: postId,
         user_id: session?.user.id,
         username: session?.user.username
+      }),
+    onSuccess: (mutationRes) => {
+      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+      newCommentTextRef.current.value = "";
+      toast({
+        title: `Comment.`,
+        description: "Your comment has been " + mutationRes.data.status,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+        position: "bottom-right"
       });
-      if (res.statusText === "Created") {
-        newCommentTextRef.current.value = "";
-        return setCreatingComment(false);
-      }
-    } catch (error: any) {
-      setError(error.response.data.text);
-    } finally {
-      setCreatingComment(false);
     }
-  };
-
-  const getComments = useCallback(async () => {
-    const res = await axios.get(`/posts/${postId}/comments`);
-    setComments(res.data);
-  }, [axios, postId]);
-
-  useEffect(() => {
-    getComments();
-  }, [creatingComment, getComments]);
+  });
 
   return (
     !!session?.user && (
@@ -78,17 +104,18 @@ export default function CommentsList({ postId }: { postId: number }) {
               colorScheme="teal"
               type="submit"
               size="xs"
-              onClick={createComment}
+              onClick={() => createComment.mutate()}
             >
               Add comment
             </Button>
           </Flex>
         </FormControl>
-        {!!comments.length &&
+        {!!comments &&
           comments.map((comment: CommentType) => (
             <Comment
               key={comment.id}
               comment={comment}
+              postId={postId}
             />
           ))}
       </Flex>

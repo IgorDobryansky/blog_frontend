@@ -15,3 +15,10 @@ export type CommentType = {
   created_at: string;
 };
 
+export type LikeType = {
+  username: string;
+  user_id: number;
+  post_id?: number;
+  comment_id?: number;
+  vote: string
+};
